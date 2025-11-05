@@ -38,6 +38,37 @@ func TestNewFromLength(t *testing.T) {
 	}
 }
 
+func TestReDefine_RGrid(t *testing.T) {
+	grid, _ := NewRGrid(0, 10, 50)
+	err := grid.ReDefine(100)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if grid.nPoints != 100 {
+		t.Errorf("expected nPoints = %v, got %v", 100, grid.nPoints)
+	}
+}
+
+func TestReDefineMinMax_RGrid(t *testing.T) {
+	grid, _ := NewRGrid(0, 10, 50)
+	err := grid.ReDefineMinMax(-10, 10, 100)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if grid.rMin != -10. {
+		t.Errorf("expected tMin = %v, got %v", -5, grid.rMin)
+	}
+	if grid.rMax != 10. {
+		t.Errorf("expected tMax = %v, got %v", 5, grid.rMax)
+	}
+
+	if grid.nPoints != 100 {
+		t.Errorf("expected nPoints = %v, got %v", 100, grid.nPoints)
+	}
+}
+
 func TestTimeGridFromLength(t *testing.T) {
 	grid, err := NewTimeGrid(10, 100, 100)
 	if err != nil {
