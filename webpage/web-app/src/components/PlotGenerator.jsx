@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState } from 'react';
 import Plot from 'react-plotly.js';
 import { BarChart3, Loader, Download, RefreshCw, Code } from 'lucide-react';
 import './plotDark.css';
@@ -21,7 +21,7 @@ const PLOT_TYPES = [
     { value: 'Demo-plot', label: 'Demo Plot' },
     { value: 'surface_3d', label: '3D Surface Plot' },
     { value: 'energy_levels', label: 'Energy Level Diagram' },
-];
+  ];
 
 const PARAM_CONFIGS = {
     RectangleBarrier: [

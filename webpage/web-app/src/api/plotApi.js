@@ -1,7 +1,7 @@
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = 'http://localhost:5173/api';
 
 class PlotAPI {
-  async generatePlotData(gridParams, plotType, potParams) {
+  async generatePlotData(plotType, parameters) {
     const response = await fetch(`${API_BASE_URL}/plots/data`, {
       method: 'POST',
       headers: {
@@ -10,7 +10,7 @@ class PlotAPI {
       body: JSON.stringify({
         grid: gridParams,
         plot_type: plotType,
-        parameters: potParams,
+        parameters: parameters,
       }),
     });
 
