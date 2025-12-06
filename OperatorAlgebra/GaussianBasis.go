@@ -13,6 +13,10 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
+const (
+	threshold = 1e-7
+)
+
 type Config struct {
 	Norb      int
 	Nelec     int
@@ -273,13 +277,20 @@ func (hf *HartreeFock) calculateXMatrix() *mat.Dense {
 
 // diagonalize performs eigenvalue decomposition
 func (hf *HartreeFock) diagonalize(m *mat.Dense) []float64 {
+	norb := hf.config.Norb
+	sym := mat.NewSymDense(norb, nil)
+	for i := 0; i < norb; i++ {
+		for j := i; j < norb; j++ {
+			sym.SetSym(i, j, m.At(i, j))
+		}
+	}
+
 	var eig mat.EigenSym
-	ok := eig.Factorize(m, true)
+	ok := eig.Factorize(sym, true)
 	if !ok {
 		panic("eigenvalue decomposition failed")
 	}
 
-	norb := hf.config.Norb
 	eigvals := make([]float64, norb)
 	eig.Values(eigvals)
 
