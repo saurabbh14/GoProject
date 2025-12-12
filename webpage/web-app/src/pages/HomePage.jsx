@@ -7,7 +7,7 @@ export default function QuantumChemistryHomepage() {
   const [activeFeature, setActiveFeature] = useState(0);
 
   useEffect(() => {
-    // Remove default margins from body
+    // Remove default margins from the body
     document.body.style.margin = '0';
     document.body.style.padding = '0';
     document.documentElement.style.margin = '0';

@@ -487,7 +487,6 @@ func (ir *IntegralReader) readTwoElectron(filename string, norb int,
 		lorb, _ := strconv.Atoi(fields[3])
 		vval, _ := strconv.ParseFloat(fields[5], 64)
 
-		// Store all 8 permutations
 		indices := []int{
 			norb3*(iorb-1) + norb2*(jorb-1) + norb*(korb-1) + lorb - 1,
 			norb3*(iorb-1) + norb2*(jorb-1) + norb*(lorb-1) + korb - 1,

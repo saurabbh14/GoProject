@@ -1,0 +1,323 @@
+/* ==================== BASE STYLES ==================== */
+.plot-generator {
+    min-height: 100vh;
+    min-width: 100vw;
+    background: linear-gradient(to bottom right, #b59563, #fdf1dd, #a88c4f);
+    color: rgba(255, 255, 255, 0);
+    padding: 1.5rem;
+}
+
+.container {
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+/* ==================== HEADER ==================== */
+.header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.title {
+    font-size: 2.25rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.subtitle {
+    color: #9ca3af;
+}
+
+/* ==================== LAYOUT GRID ==================== */
+.content-grid {
+    display: grid;
+    gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+    .content-grid {
+        grid-template-columns: 1fr 3fr;
+    }
+}
+
+/* ==================== CONTROL PANEL ==================== */
+.control-panel {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    height: fit-content;
+}
+
+.panel-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.panel-title .icon {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+/* ==================== INPUT COMPONENTS ==================== */
+.input-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-label {
+    display: block;
+    font-size: 0.875rem;
+    color: #9ca3af;
+    margin-bottom: 0.5rem;
+}
+
+.input-field,
+.select-field {
+    width: 100%;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    color: white;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.input-field:focus,
+.select-field:focus {
+    border-color: #a855f7;
+}
+
+.select-field option {
+    background: #1e293b;
+    color: white;
+}
+
+/* ==================== PARAMETERS SECTION ==================== */
+.params-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* ==================== BUTTONS ==================== */
+.generate-btn {
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(to right, #9333ea, #2563eb);
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.generate-btn:hover:not(:disabled) {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    transform: translateY(-1px);
+}
+
+.generate-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.generate-btn .icon {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.download-btn {
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 0.5rem;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.download-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.download-btn .icon {
+    width: 1rem;
+    height: 1rem;
+}
+
+.download-btn span {
+    font-size: 0.875rem;
+}
+
+/* ==================== ALERTS ==================== */
+.alert {
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.alert-error {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+}
+
+.alert-success {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    color: #86efac;
+}
+
+/* ==================== INFO BOX ==================== */
+.info-box {
+    padding: 1rem;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.info-title {
+    color: #60a5fa;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.info-list {
+    color: #d1d5db;
+    font-size: 0.75rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+/* ==================== PLOT AREA ==================== */
+.plot-area {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1rem;
+    padding: 1.5rem;
+}
+
+.plot-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.plot-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.plot-container {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+/* ==================== PLOT PLACEHOLDER ==================== */
+.plot-placeholder {
+    min-height: 600px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.placeholder-content {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.placeholder-icon {
+    width: 3rem;
+    height: 3rem;
+    margin: 0 auto;
+    color: #a855f7;
+}
+
+.placeholder-icon-large {
+    width: 4rem;
+    height: 4rem;
+    margin: 0 auto;
+    color: #4b5563;
+}
+
+.placeholder-text {
+    color: #9ca3af;
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* ==================== RESPONSIVE ADJUSTMENTS ==================== */
+@media (max-width: 1024px) {
+    .title {
+        font-size: 1.875rem;
+    }
+
+    .plot-placeholder {
+        min-height: 400px;
+    }
+}
+
+@media (max-width: 768px) {
+    .plot-generator {
+        padding: 1rem;
+    }
+
+    .title {
+        font-size: 1.5rem;
+    }
+
+    .control-panel,
+    .plot-area {
+        padding: 1rem;
+    }
+
+    .plot-header {
+        flex-direction: column;
+        gap: 0.75rem;
+        align-items: flex-start;
+    }
+
+    .download-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
