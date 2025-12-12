@@ -135,7 +135,7 @@ export default function PlotGenerator() {
                 {/* Header */}
                 <header className="header">
                     <h1 className="title">Interactive Plot Generator</h1>
-                    <p className="subtitle">Generate and explore quantum chemistry visualizations</p>
+                    <p className="subtitle">Generate plots for functions</p>
                 </header>
 
                 <div className="content-grid">
