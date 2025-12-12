@@ -7,13 +7,8 @@ import (
 )
 
 func main() {
-	OurServer.WebServer()
-	err := BasicOneD.OneDimPoissonSolver()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = BasicOneD.BarrierPotential()
+	OurServer.BasicWebServer()
+	err := BasicOneD.BarrierPotential()
 	if err != nil {
 		log.Fatal(err)
 	}

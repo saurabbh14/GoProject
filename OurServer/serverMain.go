@@ -2,12 +2,15 @@ package OurServer
 
 import (
 	"GoProject/Plots"
+	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 )
+
+const PortNumber = ":8080"
 
 func WebServer() {
 	router := mux.NewRouter()
@@ -29,4 +32,23 @@ func WebServer() {
 
 	log.Println("Server starting on :8080")
 	log.Fatal(http.ListenAndServe(":8080", handler))
+}
+
+// Home is the about page handler
+func Home(w http.ResponseWriter, r *http.Request) {
+}
+
+// About is the about page handler
+func About(w http.ResponseWriter, r *http.Request) {
+}
+
+func BasicWebServer() {
+	http.HandleFunc("/", Home)
+	http.HandleFunc("/about", About)
+
+	fmt.Println(fmt.Sprintf("Server starting on :%s", PortNumber))
+	err := http.ListenAndServe(PortNumber, nil)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
