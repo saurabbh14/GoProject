@@ -2,6 +2,7 @@ import React, { useState, useCallback, useMemo } from 'react';
 import Plot from 'react-plotly.js';
 import { BarChart3, Loader, Download, RefreshCw } from 'lucide-react';
 import './PlotGenerator.css';
+import PlotApi from '../api/plotApi';
 
 // Mock API for demo - replace with your actual plotApi
 const plotApi = {
@@ -28,6 +29,7 @@ const PLOT_TYPES = [
     { value: 'Sinusoidal', label: 'Sinusoidal' },
     { value: 'Morse', label: 'Morse' },
     { value: 'Softcore', label: 'Softcore' },
+    { value: 'Demo-plot', label: 'Demo Plot' },
     { value: 'surface_3d', label: '3D Surface Plot' },
     { value: 'energy_levels', label: 'Energy Level Diagram' },
 ];
@@ -99,8 +101,13 @@ export default function PlotGenerator() {
         setError(null);
 
         try {
-            const response = await plotApi.generatePlotData(gridParams, plotType, potParams);
-            setPlotData(response);
+            if (plotType === 'Demo-plot') {
+                const response = await plotApi.generatePlotData(gridParams, plotType, potParams);
+                setPlotData(response)
+            } else {
+                const response = await PlotApi.generatePlotData(gridParams, plotType, potParams);
+                setPlotData(response);
+            };
         } catch (err) {
             setError(err.message);
         } finally {

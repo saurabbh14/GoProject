@@ -8,7 +8,7 @@ class PlotAPI {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-          grid: gridParams,
+        grid: gridParams,
         plot_type: plotType,
         parameters: potParams,
       }),
