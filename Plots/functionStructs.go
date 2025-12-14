@@ -109,8 +109,8 @@ func createBaseLayout(title string) map[string]interface{} {
 			"gridcolor": "rgba(255,255,255,0.1)",
 			"color":     "white",
 		},
-		"plot_bgcolor":  "rgba(0,0,0,0)",
-		"paper_bgcolor": "rgba(0,0,0,0)",
+		"plot_bgcolor":  "rgba(0,0,0,0.1)",
+		"paper_bgcolor": "rgba(0, 0, 0, 0.8)",
 		"font": map[string]interface{}{
 			"color": "white",
 		},
