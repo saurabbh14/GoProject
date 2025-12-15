@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	OurServer.BasicWebServer()
+	OurServer.WebServer()
 	err := BasicOneD.BarrierPotential()
 	if err != nil {
 		log.Fatal(err)
