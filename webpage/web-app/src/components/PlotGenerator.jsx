@@ -450,7 +450,7 @@ export default function PlotGenerator() {
 
     return (
         <div className="plot-generator">
-            <div className="CalcContainer">
+            <div className="PlotContainer">
                 {/* Header */}
                 <header className="header">
                     <h1 className="title">Interactive Plot Generator</h1>
@@ -458,6 +458,7 @@ export default function PlotGenerator() {
                 </header>
 
                 <div className="content-grid">
+
                     {/* Control Panel */}
                     <aside className="control-panel">
                         <h2 className="panel-title">

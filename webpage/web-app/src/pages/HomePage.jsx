@@ -88,6 +88,7 @@ export default function QuantumChemistryHomepage() {
         <div className="hidden md:flex space-x-8 text-sm">
           <div className="hidden md:flex space-x-8 text-sm">
             <a href="/" className="hover:text-purple-400 transition">Home</a>
+            <a href="/plots" className="hover:text-purple-400 transition">Plot Generator</a>
             <a href="/Calculator" className="hover:text-purple-400 transition">Calculator</a>
             <a href="#features" className="hover:text-purple-400 transition">Features</a>
             <a href="#docs" className="hover:text-purple-400 transition">Docs</a>
