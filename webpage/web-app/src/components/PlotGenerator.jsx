@@ -450,7 +450,7 @@ export default function PlotGenerator() {
 
     return (
         <div className="plot-generator">
-            <div className="container">
+            <div className="CalcContainer">
                 {/* Header */}
                 <header className="header">
                     <h1 className="title">Interactive Plot Generator</h1>
