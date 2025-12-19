@@ -27,7 +27,7 @@ type rootFinderImpl struct {
     maxIter int
 }
 
-// NewRootFinder constructs a RootFinder.
+// NewRootFinder constructs a RootFinder. If maxIter <= 0 a sensible default is used.
 func NewRootFinder(f gridData.Rfunc, maxIter int) RootFinder {
     if maxIter <= 0 {
         maxIter = 200
