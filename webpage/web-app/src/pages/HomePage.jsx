@@ -91,7 +91,7 @@ export default function QuantumChemistryHomepage() {
             <a href="/plots" className="hover:text-purple-400 transition">Plot Generator</a>
             <a href="/Calculator" className="hover:text-purple-400 transition">Calculator</a>
             <a href="#features" className="hover:text-purple-400 transition">Features</a>
-            <a href="#docs" className="hover:text-purple-400 transition">Docs</a>
+            <a href="/customfuncs" className="hover:text-purple-400 transition">Functions Sandbox</a>
           </div>
         </div>
         <div className="flex space-x-4">

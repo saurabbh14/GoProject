@@ -19,6 +19,10 @@ type Rfunc interface {
 	Function[float64]
 }
 
+type RfuncFunc func(float64) float64
+
+func (f RfuncFunc) EvaluateAt(x float64) float64 { return f(x) }
+
 type RectangleBarrier struct {
 	vax []float64
 	ax  []float64
