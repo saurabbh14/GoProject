@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './dark.css';
+import '../components/plotDark.css';
 
 export default function CalculatorView() {
     const [display, setDisplay] = useState('0');

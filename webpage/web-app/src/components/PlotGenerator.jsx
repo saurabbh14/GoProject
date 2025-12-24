@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import Plot from 'react-plotly.js';
 import { BarChart3, Loader, Download, RefreshCw, Code } from 'lucide-react';
-import './PlotGenerator.css';
+import './plotDark.css';
 
 // ============================================================================
 // CONSTANTS & CONFIGURATION
@@ -450,17 +450,17 @@ export default function PlotGenerator() {
 
     return (
         <div className="plot-generator">
-            <div className="PlotContainer">
-                {/* Header */}
-                <header className="header">
-                    <h1 className="title">Interactive Plot Generator</h1>
-                    <p className="subtitle">Generate plots for functions</p>
-                </header>
+            {/* Header */}
+            <header className="header">
+                <h1 className="title">Interactive Plot Generator</h1>
+                <p className="subtitle">Generate plots for functions</p>
+            </header>
 
+            <div className="CalcContainer">
                 <div className="content-grid">
 
                     {/* Control Panel */}
-                    <aside className="control-panel">
+                    <aside className="sidebar-calc">
                         <h2 className="panel-title">
                             <BarChart3 className="icon" />
                             <span>Plot Settings</span>
