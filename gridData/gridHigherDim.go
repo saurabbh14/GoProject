@@ -291,19 +291,32 @@ func (g *NDimGrid) FunctionOnGridInPlace(fn func([]float64) float64, f []float64
 }
 
 // PotentialOnGrid evaluates a potential on the grid
-func (g *NDimGrid) PotentialOnGrid(pot NDPotentialOp) []float64 {
+func (g *NDimGrid) PotentialOnGrid(pot PotentialOp[float64]) []float64 {
 	totalPts := g.TotalPoints()
 	result := make([]float64, totalPts)
 
 	for i := uint64(0); i < totalPts; i++ {
 		coords := g.GetPoint(i)
-		result[i] = pot.EvaluateAt(coords)
+		result[i] = pot.NDimEvaluateAt(coords)
 	}
 
 	return result
 }
 
-// PrintVectorToFile writes a vector to file with coordinates
+// PotentialOnGridInPlace evaluates a potential on the grid
+func (g *NDimGrid) PotentialOnGridInPlace(pot PotentialOp[float64], res []float64) {
+
+	if uint64(len(res)) != g.TotalPoints() {
+		res = make([]float64, g.TotalPoints())
+	}
+
+	for i := uint64(0); i < g.TotalPoints(); i++ {
+		coords := g.GetPoint(i)
+		res[i] = pot.NDimEvaluateAt(coords)
+	}
+}
+
+// PrintVectorToFile writes a vector to a file with coordinates
 func (g *NDimGrid) PrintVectorToFile(vec []float64, filename string, format string) error {
 	file, err := os.Create(filename)
 	if err != nil {
@@ -369,10 +382,4 @@ func generateConjugatePointsND(g *NDimGrid, dim uint32) []float64 {
 		result[i] = g.gridData[dim].cMin + float64(i)*g.gridData[dim].deltaCS
 	}
 	return result
-}
-
-// NDPotentialOp interface for n-dimensional potentials
-type NDPotentialOp interface {
-	EvaluateAt(coords []float64) float64
-	ForceAt(coords []float64) []float64
 }

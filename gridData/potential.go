@@ -12,10 +12,12 @@ type VarType interface {
 
 type Function[T VarType] interface {
 	EvaluateAt(x T) T
+	NDimEvaluateAt(x []T) T
 }
 
 type Rfunc interface {
 	EvaluateAt(x float64) float64
+	NDimEvaluateAt(x []float64) float64
 }
 
 type RectangleBarrier struct {
@@ -61,6 +63,14 @@ func (S *Sinusoidal) Redefine(v0, omega float64, phi float64) {
 
 func (S *Sinusoidal) EvaluateAt(x float64) float64 {
 	return S.v0 * math.Sin(x*S.omega+S.phi)
+}
+
+func (S *Sinusoidal) NDimEvaluateAt(x []float64) float64 {
+	r2 := 0.
+	for _, val := range x {
+		r2 += val * val
+	}
+	return S.v0 * math.Sin(math.Sqrt(r2)*S.omega+S.phi)
 }
 
 // PotentialOp General interface for evaluating the potential on a grid

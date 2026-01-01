@@ -4,7 +4,7 @@ type TDfunc interface {
 	EvaluateAtTime(x float64, t float64) float64
 }
 
-// TDPotentialOp General interface for the evaluating the potential on a grid
+// TDPotentialOp General interface for evaluating the potential on a grid
 type TDPotentialOp interface {
 	TDfunc
 	EvaluateOnRGridTime(x []float64, t float64) []float64
