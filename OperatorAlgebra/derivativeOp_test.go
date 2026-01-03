@@ -818,7 +818,7 @@ func TestComputeMatrix(t *testing.T) {
 			}
 
 			keMat := mat.NewDense(5, 5, nil)
-			fd.computeMatrix(keMat)
+			fd.ComputeMatrix(keMat)
 
 			hasNonZero := false
 			for i := 0; i < 5; i++ {
