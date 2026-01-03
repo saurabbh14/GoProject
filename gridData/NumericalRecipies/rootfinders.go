@@ -11,9 +11,9 @@ import (
 // RootFinder is an interface that can find roots for a single interval
 // (single-point routines) and over an entire RadGrid (grid-level routines).
 type RootFinder interface {
-    FindRoot(a, b, tol float64, g gridData.Rfunc) (float64, error)
-    FindRootInPlace()
-    FindRootsOnGrid()
+    FindRoot(a, b, tol float64, f gridData.Rfunc) (float64, error)
+    FindRootOnGridInPlace(f gridData.Rfunc, a, b, tol float64) ([]float64,error)
+    FindRootsOnGrid(f gridData.Rfunc, g *gridData.RadGrid, tol float64) ([]float64, error)
 }
 
 // Bisection Struct for root finding
@@ -65,4 +65,28 @@ func (r *Bisection) FindRoot(a, b, tol float64, f gridData.Rfunc) (float64, erro
     }
 
     return 0, fmt.Errorf("bisection did not converge after %d iterations", r.maxIter)
+}
+
+func (r *Bisection) FindRootsOnGrid(f gridData.Rfunc, g *gridData.RadGrid, tol float64) ([]float64, error) {
+    xs := g.RValues()
+    if len(xs) < 2 {
+        return nil, fmt.Errorf("grid must contain at least two points")
+    }
+    var roots []float64
+    for i := 0; i < len(xs)-1; i++ {
+        a := xs[i]
+        b := xs[i+1]
+        fa := f.EvaluateAt(a)
+        fb := f.EvaluateAt(b)
+        if math.Abs(fa) == 0 {
+            roots = append(roots, a)
+            continue
+        }
+        if fa*fb < 0 {
+            if rt, err := r.FindRoot(a, b, tol, f); err == nil {
+                roots = append(roots, rt)
+            }
+        }
+    }
+    return roots, nil
 }
