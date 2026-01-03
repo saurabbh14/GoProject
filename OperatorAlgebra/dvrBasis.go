@@ -7,56 +7,44 @@ import (
 	"math"
 	"math/cmplx"
 
-	"gonum.org/v1/gonum/blas"
-	"gonum.org/v1/gonum/blas/cblas128"
 	"gonum.org/v1/gonum/mat"
 )
 
-// KeDvrBasis represents the kinetic energy operator in DVR basis with caching
+// KeDvrBasis represents the kinetic energy operator
 type KeDvrBasis struct {
-	grid        *gridData.RadGrid
-	mass        float64
-	ndims       int
-	dx2         float64
-	massDx2     float64
-	invMassDx2  float64
-	diagTerm    float64
-	diagTermZ2I float64
-	kMat        *mat.Dense
-	kMatCached  bool
+	grid       *gridData.RadGrid
+	mass       float64
+	ndims      int
+	dx2        float64
+	invMassDx2 float64
+	diagTerm   float64
+	kMat       *mat.Dense
+
+	kMatCached bool
+	eigCached  bool
+	eigVals    []float64
+	eigVecs    *mat.Dense
 }
 
-func (k *KeDvrBasis) ExpDtTo(Dt float64, In []float64, Out []float64) error {
-	if len(In) != len(Out) {
-		return errors.New("vector dimensions do not match")
-	}
-	return nil
-}
-
-func (k *KeDvrBasis) ExpIdtTo(Dt float64, In []complex128, Out []complex128) {
-	//TODO implement me
-	panic("implement me")
-}
-
-// NewKeDVR creates and initializes a new kinetic energy DVR basis
+// NewKeDVR creates and initializes DVR basis
 func NewKeDVR(grid *gridData.RadGrid, mass float64) *KeDvrBasis {
 	ndim := int(grid.NPoints())
 	dx2 := grid.DeltaR() * grid.DeltaR()
-	massDx2 := mass * dx2
-	invMassDx2 := 1.0 / massDx2
-	diagTerm := math.Pi * math.Pi / (6.0 * massDx2)
+	invMassDx2 := 1.0 / (mass * dx2)
+	diagTerm := math.Pi * math.Pi / (6.0 * mass * dx2)
 
 	return &KeDvrBasis{
-		grid:        grid,
-		mass:        mass,
-		ndims:       ndim,
-		dx2:         dx2,
-		massDx2:     massDx2,
-		invMassDx2:  invMassDx2,
-		diagTerm:    diagTerm,
-		diagTermZ2I: diagTerm - 0.25, // Pre-compute for zero-to-infinity
-		kMat:        mat.NewDense(ndim, ndim, nil),
-		kMatCached:  false,
+		grid:       grid,
+		mass:       mass,
+		ndims:      ndim,
+		dx2:        dx2,
+		invMassDx2: invMassDx2,
+		diagTerm:   diagTerm,
+		kMat:       mat.NewDense(ndim, ndim, nil),
+		kMatCached: false,
+		eigCached:  false,
+		eigVals:    nil,
+		eigVecs:    nil,
 	}
 }
 
@@ -65,33 +53,27 @@ func (k *KeDvrBasis) isZeroToInfinity() bool {
 	return math.Abs(k.grid.RMax()+k.grid.RMin()) >= 1
 }
 
-// buildRealMinInftyToInfty constructs the kinetic energy matrix for (-∞, ∞) domain
-func (k *KeDvrBasis) buildRealMinInftyToInfty(mat *mat.Dense) {
+// MinInftyToInfty constructs the kinetic energy matrix
+func (k *KeDvrBasis) MinInftyToInfty(m *mat.Dense) {
 	for i := 0; i < k.ndims; i++ {
-		mat.Set(i, i, k.diagTerm)
+		m.Set(i, i, k.diagTerm)
 	}
-
 	for i := 1; i < k.ndims; i++ {
 		for j := 0; j < i; j++ {
 			diff := i - j
 			sign := float64(1 - 2*(diff&1))
-			diffSq := float64(diff * diff)
-			val := sign * k.invMassDx2 / diffSq
-
-			mat.Set(i, j, val)
-			mat.Set(j, i, val)
+			val := sign * k.invMassDx2 / float64(diff*diff)
+			m.Set(i, j, val)
+			m.Set(j, i, val)
 		}
 	}
 }
 
-// buildRealZeroToInfinity constructs the kinetic energy matrix for [0, ∞) domain
-func (k *KeDvrBasis) buildRealZeroToInfinity(mat *mat.Dense) {
+// ZeroToInfinity constructs the kinetic energy matrix for [0, ∞) domain
+func (k *KeDvrBasis) ZeroToInfinity(m *mat.Dense) {
+	constVal := 0.25 * k.invMassDx2
 	for i := 0; i < k.ndims; i++ {
-		diagVal := k.diagTerm
-		if i > 0 {
-			diagVal += k.diagTermZ2I / float64(i*i)
-		}
-		mat.Set(i, i, diagVal)
+		m.Set(i, i, k.diagTerm-constVal/float64((i+1)*(i+1)))
 	}
 
 	for i := 1; i < k.ndims; i++ {
@@ -101,11 +83,9 @@ func (k *KeDvrBasis) buildRealZeroToInfinity(mat *mat.Dense) {
 			sign := float64(1 - 2*(diff&1))
 			diffSq := float64(diff * diff)
 			addSq := float64(add * add)
-
 			val := sign * k.invMassDx2 * (1.0/diffSq - 1.0/addSq)
-
-			mat.Set(i, j, val)
-			mat.Set(j, i, val)
+			m.Set(i, j, val)
+			m.Set(j, i, val)
 		}
 	}
 }
@@ -114,156 +94,228 @@ func (k *KeDvrBasis) buildRealZeroToInfinity(mat *mat.Dense) {
 func (k *KeDvrBasis) GetMat() *mat.Dense {
 	if !k.kMatCached {
 		if k.isZeroToInfinity() {
-			k.buildRealZeroToInfinity(k.kMat)
+			k.ZeroToInfinity(k.kMat)
 		} else {
-			k.buildRealMinInftyToInfty(k.kMat)
+			k.MinInftyToInfty(k.kMat)
 		}
 		k.kMatCached = true
+		k.eigCached = false
 	}
 	return k.kMat
 }
 
-// scaleMatrixComplexParam scales a real matrix by exp(-2iθ) and stores in complex matrix
-func scaleMatrixComplexParam(realMat *mat.Dense, complexMat *mat.CDense, theta float64) {
-	rows, cols := realMat.Dims()
-	expFactor := cmplx.Exp(-complex(0, 2*theta))
+func (k *KeDvrBasis) ensureEigen() error {
+	if k.eigCached {
+		return nil
+	}
 
-	for i := 0; i < rows; i++ {
-		for j := 0; j < cols; j++ {
-			val := complex(realMat.At(i, j), 0) * expFactor
-			complexMat.Set(i, j, val)
+	KM := k.GetMat()
+
+	// Convert Dense to Symmetric
+	sym := mat.NewSymDense(k.ndims, nil)
+	for i := 0; i < k.ndims; i++ {
+		for j := i; j < k.ndims; j++ {
+			sym.SetSym(i, j, KM.At(i, j))
 		}
 	}
+
+	var es mat.EigenSym
+	ok := es.Factorize(sym, true)
+	if !ok {
+		return errors.New("eigendecomposition failed (EigenSym.Factorize returned false)")
+	}
+
+	k.eigVals = es.Values(nil)
+	k.eigVecs = mat.NewDense(k.ndims, k.ndims, nil)
+	es.VectorsTo(k.eigVecs)
+
+	k.eigCached = true
+	return nil
 }
 
-// GetComplexMat returns the complex-scaled kinetic energy matrix
-func (k *KeDvrBasis) GetComplexMat(theta float64) *mat.CDense {
-	realMat := k.GetMat()
-	complexMat := mat.NewCDense(k.ndims, k.ndims, nil)
-	scaleMatrixComplexParam(realMat, complexMat, theta)
-	return complexMat
+// ExpDtTo applies exp(Dt * K) to In and writes to Out (real -> real)
+func (k *KeDvrBasis) ExpDtTo(Dt float64, In []float64, Out []float64) error {
+	if len(In) != k.ndims || len(Out) != k.ndims {
+		return fmt.Errorf("vector length mismatch: got In=%d Out=%d, expected %d", len(In), len(Out), k.ndims)
+	}
+	if err := k.ensureEigen(); err != nil {
+		return err
+	}
+
+	V := k.eigVecs
+	lams := k.eigVals
+
+	// tmp = V^T * In  (real)
+	tmp := make([]float64, k.ndims)
+	for i := 0; i < k.ndims; i++ {
+		sum := 0.0
+		for j := 0; j < k.ndims; j++ {
+			sum += V.At(j, i) * In[j] // V^T: (i,j) = V(j,i)
+		}
+		tmp[i] = sum
+	}
+
+	// tmp[i] *= exp(Dt * lambda_i)
+	for i := 0; i < k.ndims; i++ {
+		tmp[i] *= math.Exp(Dt * lams[i])
+	}
+
+	// Out = V * tmp
+	for i := 0; i < k.ndims; i++ {
+		sum := 0.0
+		for j := 0; j < k.ndims; j++ {
+			sum += V.At(i, j) * tmp[j]
+		}
+		Out[i] = sum
+	}
+
+	return nil
 }
 
-// RealDiagonalize diagonalizes the real kinetic energy matrix
-func (k *KeDvrBasis) RealDiagonalize() (eigenvalues []float64, eigenvectors *mat.Dense, err error) {
-	eigenvalues = make([]float64, k.ndims)
-	eigenvectors = mat.NewDense(k.ndims, k.ndims, nil)
-	eigenvectors = k.GetMat()
-	err = RealDiagonalizeLapack(eigenvectors, eigenvalues)
-	return eigenvalues, eigenvectors, err
+// ExpIdtTo applies exp(i * Dt * K) to In and writes to Out (complex -> complex)
+func (k *KeDvrBasis) ExpIdtTo(Dt float64, In []complex128, Out []complex128) error {
+	if len(In) != k.ndims || len(Out) != k.ndims {
+		return fmt.Errorf("vector length mismatch: got In=%d Out=%d, expected %d", len(In), len(Out), k.ndims)
+	}
+	if err := k.ensureEigen(); err != nil {
+		return err
+	}
+
+	V := k.eigVecs
+	lams := k.eigVals
+
+	// tmp = V^T * In  (complex)
+	tmp := make([]complex128, k.ndims)
+	for i := 0; i < k.ndims; i++ {
+		var sum complex128
+		for j := 0; j < k.ndims; j++ {
+			sum += complex(V.At(j, i), 0) * In[j]
+		}
+		tmp[i] = sum
+	}
+
+	// tmp[i] *= exp(i * Dt * lambda_i)
+	for i := 0; i < k.ndims; i++ {
+		tmp[i] *= cmplx.Exp(complex(0, Dt*lams[i]))
+	}
+
+	// Out = V * tmp
+	for i := 0; i < k.ndims; i++ {
+		var sum complex128
+		for j := 0; j < k.ndims; j++ {
+			sum += complex(V.At(i, j), 0) * tmp[j]
+		}
+		Out[i] = sum
+	}
+
+	return nil
 }
 
-// ExpDt computes exp(dt * K) and applies it to input vector
+// ExpDt computes exp(dt * K) and applies it to input vector (allocating output)
 func (k *KeDvrBasis) ExpDt(dt float64, in []float64) ([]float64, error) {
 	if len(in) != k.ndims {
 		return nil, fmt.Errorf("input vector length %d doesn't match basis dimension %d", len(in), k.ndims)
 	}
-
-	kMat := k.GetMat()
-	scaledMat := mat.NewDense(k.ndims, k.ndims, nil)
-	scaledMat.Scale(dt, kMat)
-
-	expMat := mat.NewDense(k.ndims, k.ndims, nil)
-	expMat.Exp(scaledMat)
-
-	result := make([]float64, k.ndims)
-	resultVec := mat.NewVecDense(k.ndims, result)
-	inVec := mat.NewVecDense(k.ndims, in)
-	resultVec.MulVec(expMat, inVec)
-
-	return result, nil
+	out := make([]float64, k.ndims)
+	if err := k.ExpDtTo(dt, in, out); err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
-// ExpDtInPlace computes exp(dt * K) and applies it to input vector in-place
+// ExpDtInPlace computes exp(dt * K) and applies it to the input vector in-place
 func (k *KeDvrBasis) ExpDtInPlace(dt float64, inOut []float64) error {
 	if len(inOut) != k.ndims {
 		return fmt.Errorf("vector length %d doesn't match basis dimension %d", len(inOut), k.ndims)
 	}
-
-	kMat := k.GetMat()
-	scaledMat := mat.NewDense(k.ndims, k.ndims, nil)
-	scaledMat.Scale(dt, kMat)
-
-	expMat := mat.NewDense(k.ndims, k.ndims, nil)
-	expMat.Exp(scaledMat)
-
-	temp := make([]float64, k.ndims)
-	tempVec := mat.NewVecDense(k.ndims, temp)
-	inOutVec := mat.NewVecDense(k.ndims, inOut)
-	tempVec.MulVec(expMat, inOutVec)
-
-	copy(inOut, temp)
+	tmp := make([]float64, k.ndims)
+	if err := k.ExpDtTo(dt, inOut, tmp); err != nil {
+		return err
+	}
+	copy(inOut, tmp)
 	return nil
 }
 
-// ExpIdt computes exp(i*dt*K) and applies it to complex input vector
-// This implements the complex-scaled exponential: exp(i*dt*K)
+// ExpIdt computes exp(i*dt*K) and applies it to a complex input vector (allocating output)
 func (k *KeDvrBasis) ExpIdt(dt float64, in []complex128) ([]complex128, error) {
 	if len(in) != k.ndims {
 		return nil, fmt.Errorf("input vector length %d doesn't match basis dimension %d", len(in), k.ndims)
 	}
-
-	kMat := k.GetMat()
-	scaledMat := mat.NewDense(k.ndims, k.ndims, nil)
-	scaledMat.Scale(dt, kMat)
-
-	complexScaled := mat.NewCDense(k.ndims, k.ndims, nil)
-	for i := 0; i < k.ndims; i++ {
-		for j := 0; j < k.ndims; j++ {
-			complexScaled.Set(i, j, 1i*complex(scaledMat.At(i, j), 0))
-		}
+	out := make([]complex128, k.ndims)
+	if err := k.ExpIdtTo(dt, in, out); err != nil {
+		return nil, err
 	}
-
-	expMat := mat.NewCDense(k.ndims, k.ndims, nil)
-	//	expMat.Exp(complexScaled)
-
-	result := make([]complex128, k.ndims)
-	cblas128.Gemv(
-		blas.NoTrans,
-		complex(1, 0),
-		expMat.RawCMatrix(),
-		cblas128.Vector{N: len(in), Data: in, Inc: 1},
-		complex(0, 0),
-		cblas128.Vector{N: len(result), Data: result, Inc: 1},
-	)
-
-	return result, nil
+	return out, nil
 }
 
 func (k *KeDvrBasis) ExpIdtInPlace(dt float64, inOut []complex128) error {
 	if len(inOut) != k.ndims {
 		return fmt.Errorf("vector length %d doesn't match basis dimension %d", len(inOut), k.ndims)
 	}
-
-	result, err := k.ExpIdt(dt, inOut)
-	if err != nil {
+	tmp := make([]complex128, k.ndims)
+	if err := k.ExpIdtTo(dt, inOut, tmp); err != nil {
 		return err
 	}
-
-	copy(inOut, result)
+	copy(inOut, tmp)
 	return nil
+}
+
+// RealDiagonalize diagonalizes the real kinetic energy matrix (fixed)
+func (k *KeDvrBasis) RealDiagonalize() (eigenvalues []float64, eigenvectors *mat.Dense, err error) {
+	if err = k.ensureEigen(); err != nil {
+		return nil, nil, err
+	}
+
+	eigenvalues = make([]float64, k.ndims)
+	copy(eigenvalues, k.eigVals)
+
+	eigenvectors = mat.NewDense(k.ndims, k.ndims, nil)
+	eigenvectors.Copy(k.eigVecs)
+	return eigenvalues, eigenvectors, nil
 }
 
 func (k *KeDvrBasis) Clone() *KeDvrBasis {
 	newK := &KeDvrBasis{
-		grid:        k.grid,
-		mass:        k.mass,
-		ndims:       k.ndims,
-		dx2:         k.dx2,
-		massDx2:     k.massDx2,
-		invMassDx2:  k.invMassDx2,
-		diagTerm:    k.diagTerm,
-		diagTermZ2I: k.diagTermZ2I,
-		kMat:        mat.NewDense(k.ndims, k.ndims, nil),
-		kMatCached:  false,
+		grid:       k.grid,
+		mass:       k.mass,
+		ndims:      k.ndims,
+		dx2:        k.dx2,
+		invMassDx2: k.invMassDx2,
+		diagTerm:   k.diagTerm,
+		kMat:       mat.NewDense(k.ndims, k.ndims, nil),
+		kMatCached: false,
+
+		eigCached: false,
+		eigVals:   nil,
+		eigVecs:   nil,
 	}
+
 	if k.kMatCached {
 		newK.kMat.Copy(k.kMat)
 		newK.kMatCached = true
 	}
+
+	// If eigen cache exists, copy it too (optional but handy)
+	if k.eigCached && k.eigVals != nil && k.eigVecs != nil {
+		newK.eigVals = make([]float64, len(k.eigVals))
+		copy(newK.eigVals, k.eigVals)
+		newK.eigVecs = mat.NewDense(k.ndims, k.ndims, nil)
+		newK.eigVecs.Copy(k.eigVecs)
+		newK.eigCached = true
+	}
+
 	return newK
+}
+
+func (k *KeDvrBasis) Ndims() int {
+	return k.ndims
+}
+
+func (k *KeDvrBasis) Mass() float64 {
+	return k.mass
 }
 
 func (k *KeDvrBasis) Clear() {
 	k.kMatCached = false
+	k.eigCached = false
 }
