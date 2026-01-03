@@ -153,7 +153,7 @@ func (f *FourierBasis) destroy() {
 
 // Clean cleans up FFTW
 func (f *FourierBasis) Clean() {
-	runtime.SetFinalizer(f, nil)
+	runtime.SetFinalizer(f, (*FourierBasis).destroy)
 	f.destroy()
 	fmt.Println("Cleaned")
 }
