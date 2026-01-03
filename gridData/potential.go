@@ -25,6 +25,11 @@ type RectangleBarrier struct {
 	ax  []float64
 }
 
+func (RB *RectangleBarrier) NDimEvaluateAt(x []float64) float64 {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewRectBarrier(vax, ax []float64) *RectangleBarrier {
 	return &RectangleBarrier{vax: vax, ax: ax}
 }
@@ -104,6 +109,11 @@ type Morse[T VarType] struct {
 	De    float64
 	Alpha float64
 	Cen   float64
+}
+
+func (m Morse[T]) NDimEvaluateAt(x []T) T {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (m Morse[T]) String() string {
@@ -187,6 +197,11 @@ type SoftCore[T VarType] struct {
 	SoftParam float64
 }
 
+func (sc SoftCore[T]) NDimEvaluateAt(x []T) T {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (sc SoftCore[T]) String() string {
 	return fmt.Sprintf("Za/Sqrt((x - x0)^2 + a^2), where Za=%g, x0=%g, a^2=%g",
 		sc.Charge, sc.Centre, sc.SoftParam*sc.SoftParam)
@@ -268,6 +283,11 @@ type Gaussian[T VarType] struct {
 	Cen      float64
 	Sigma    float64
 	Strength float64
+}
+
+func (g Gaussian[T]) NDimEvaluateAt(_ []T) T {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (g Gaussian[T]) String() string {
@@ -495,6 +515,11 @@ type SuperGaussian[T VarType] struct {
 	Order    uint8
 }
 
+func (sg SuperGaussian[T]) NDimEvaluateAt(x []T) T {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (sg SuperGaussian[T]) String() string {
 	return fmt.Sprintf("%g Exp[ ((x - %g)/ %g)^%v]", sg.Strength, sg.Cen, sg.Sigma, sg.Order)
 }
@@ -574,6 +599,11 @@ func (sg SupGaussZ64) forceAt(x complex128) complex128 {
 type Harmonic[T VarType] struct {
 	Cen        float64
 	ForceConst float64
+}
+
+func (h Harmonic[T]) NDimEvaluateAt(x []T) T {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (h Harmonic[T]) String() string { return fmt.Sprintf("1/2 %g (x - %g)^2", h.ForceConst, h.Cen) }

@@ -16,6 +16,11 @@ type ProductFunc struct {
 	func2 Rfunc
 }
 
+func (PF *ProductFunc) NDimEvaluateAt(x []float64) float64 {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewProductFunc(func1 Rfunc, func2 Rfunc) *ProductFunc {
 	return &ProductFunc{func1, func2}
 }

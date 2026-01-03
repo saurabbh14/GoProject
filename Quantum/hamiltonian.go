@@ -35,6 +35,7 @@ func (op *HamiltonianOp) Mat() error {
 	for i := 0; i < int(op.grid.NPoints()); i++ {
 		op.hmat.(*mat.Dense).Set(i, i, op.hmat.At(i, i)+vPot[i])
 	}
+	return nil
 }
 
 func (op *HamiltonianOp) EvaluateOp() *mat.Dense {
