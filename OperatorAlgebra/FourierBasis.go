@@ -3,11 +3,13 @@ package OperatorAlgebra
 import (
 	"GoProject/gridData"
 	"fmt"
+	"log"
 	"math"
 	"math/rand/v2"
 	"runtime"
 
 	"github.com/jvlmdr/go-fftw/fftw"
+	"gonum.org/v1/gonum/mat"
 )
 
 // FourierBasis represents the kinetic energy operator in Fourier/DVR basis
@@ -141,6 +143,43 @@ func (f *FourierBasis) LaplacianOp(In []complex128, Out []complex128) {
 	copy(Out, In)
 	f.LaplacianOpInPlace(Out)
 	copy(Out, f.Buff.Elems)
+}
+
+func (f *FourierBasis) BuildHamiltonianFGH() *mat.SymDense {
+	Tr := make([]float64, f.nPoints)
+	pref := 1. / (2.0 * f.mass)
+	for r := 1; r <= f.nPoints; r++ {
+		k := 2.0 * math.Pi * float64(r) / f.grid.Length()
+		Tr[r] = pref * k * k
+	}
+
+	H := mat.NewSymDense(f.nPoints, nil)
+	for i := 0; i < f.nPoints; i++ {
+		for j := 0; j <= i; j++ {
+			d := i - j
+			sum := 0.0
+			for r := 1; r <= f.nPoints; r++ {
+				angle := 2.0 * math.Pi * float64(r*d) / float64(f.nPoints)
+				sum += math.Cos(angle) * Tr[r]
+			}
+			hij := (2.0 / float64(f.nPoints)) * sum
+			H.SetSym(i, j, hij)
+		}
+	}
+	return H
+}
+
+func (f *FourierBasis) DiagonalizeSym() (vals []float64, vecs *mat.Dense) {
+	H := f.BuildHamiltonianFGH()
+	var es mat.EigenSym
+	ok := es.Factorize(H, true)
+	if !ok {
+		log.Fatal("eigensolve failed")
+	}
+	vals = es.Values(nil)
+	vecs = mat.NewDense(len(vals), len(vals), nil)
+	es.VectorsTo(vecs)
+	return vals, vecs
 }
 
 func (f *FourierBasis) destroy() {
