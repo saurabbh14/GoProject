@@ -15,6 +15,31 @@ type FiniteDiff struct {
 	stencil      []float64
 }
 
+func (fd *FiniteDiff) RealDiagonalize() (eigenvalues []float64, eigenvectors *mat.Dense, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (fd *FiniteDiff) ExpDtTo(Dt float64, In []float64, Out []float64) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (fd *FiniteDiff) ExpDtInPlace(Dt float64, InOut []float64) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (fd *FiniteDiff) ExpIdtTo(Dt float64, In []complex128, Out []complex128) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (fd *FiniteDiff) ExpIdtInPlace(Dt float64, InOut []complex128) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 var stencilCoeffs = map[int][]float64{
 	3: {-2.0, 1.0},                                                       // 3-point
 	5: {-5.0 / 2.0, 4.0 / 3.0, -1.0 / 12.0},                              // 5-point

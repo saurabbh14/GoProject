@@ -14,8 +14,33 @@ type HamiltonianOp struct {
 	hmat mat.Matrix
 }
 
-func NewHamil(grid *gridData.RadGrid, mass float64, Pot gridData.PotentialOp[float64]) *HamiltonianOp {
+func NewHamilDVR(grid *gridData.RadGrid, mass float64, Pot gridData.PotentialOp[float64]) *HamiltonianOp {
 	kinE := OperatorAlgebra.NewKeDVR(grid, mass)
+	Hmat := mat.Matrix(mat.NewDense(int(grid.NPoints()), int(grid.NPoints()), nil))
+	return &HamiltonianOp{
+		grid: grid,
+		kinE: kinE,
+		potE: Pot,
+		hmat: Hmat,
+	}
+}
+
+func NewHamilFD(grid *gridData.RadGrid, mass float64, Pot gridData.PotentialOp[float64]) *HamiltonianOp {
+	kinE, err := OperatorAlgebra.NewFiniteDiff(grid, mass, 3)
+	if err != nil {
+		panic(err)
+	}
+	Hmat := mat.Matrix(mat.NewDense(int(grid.NPoints()), int(grid.NPoints()), nil))
+	return &HamiltonianOp{
+		grid: grid,
+		kinE: kinE,
+		potE: Pot,
+		hmat: Hmat,
+	}
+}
+
+func NewHamilFourier(grid *gridData.RadGrid, mass float64, Pot gridData.PotentialOp[float64]) *HamiltonianOp {
+	kinE := OperatorAlgebra.FFTInit(grid, mass)
 	Hmat := mat.Matrix(mat.NewDense(int(grid.NPoints()), int(grid.NPoints()), nil))
 	return &HamiltonianOp{
 		grid: grid,

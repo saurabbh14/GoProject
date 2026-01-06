@@ -12,7 +12,7 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
-// FourierBasis represents the kinetic energy operator in Fourier/DVR basis
+// FourierBasis represents the kinetic energy operator in a Fourier basis
 type FourierBasis struct {
 	grid     *gridData.RadGrid
 	mass     float64
@@ -22,6 +22,31 @@ type FourierBasis struct {
 	Buff     *fftw.Array
 	kValues  []float64
 	keValues []float64
+}
+
+func (f *FourierBasis) RealDiagonalize() (eigenvalues []float64, eigenvectors *mat.Dense, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f *FourierBasis) ExpDtTo(Dt float64, In []float64, Out []float64) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f *FourierBasis) ExpDtInPlace(Dt float64, InOut []float64) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f *FourierBasis) ExpIdtTo(Dt float64, In []complex128, Out []complex128) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f *FourierBasis) ExpIdtInPlace(Dt float64, InOut []complex128) error {
+	//TODO implement me
+	panic("implement me")
 }
 
 // FFTInit creates a new Fourier struct for fast fourier transform
