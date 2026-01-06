@@ -77,7 +77,7 @@ func (SF *FuncWithTDPert) EvaluateAtTime(x, t float64) float64 {
 	return SF.tiFunc.EvaluateAt(x) + SF.tdFunc.EvaluateAtTime(x, t)
 }
 
-// CompositePotentialOp multiplication of two function
+// CompositePotentialOp multiplication of two functions
 type CompositePotentialOp[T VarType] struct {
 	func1 PotentialOp[T]
 	func2 PotentialOp[T]
