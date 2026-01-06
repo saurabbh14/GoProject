@@ -172,8 +172,10 @@ func (fb *FiniteBarrier) scattering(kL, kR float64, left []complex128) []complex
 	return result
 }
 
-func (fb *FiniteBarrier) TransProb(kL, kR float64) []float64 {
+func (fb *FiniteBarrier) TransProb(Emin, Emax float64, nPoints uint) []float64 {
 
+	te := make([]float64, nPoints)
+	return te
 }
 
 func (fb *FiniteBarrier) TransProbInPlace(kL, kR float64) {

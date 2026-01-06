@@ -72,20 +72,6 @@ class User extends Hello {
     }
 }
 
-User.incrementCount();
-User.incrementCount();
-User.printCount();
-User.decrementCount();
-User.printCount();
-
-const user = new User("John", 30);
-user.greet();
-
-
-// ============================================================================
-// EXAMPLES: Calculator, FunctionEvaluator and plotter
-// ============================================================================
-
 export const examples = {
     basicCalculator: (): number => {
         const calculator = new ScientificCalculator();
