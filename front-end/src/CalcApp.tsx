@@ -12,11 +12,6 @@ export default function CalculatorApp() {
     const [showScientific, setShowScientific] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // ===== HELPER FUNCTIONS (Small, focused utilities) =====
-
-    /**
-     * Resets all calculator state to initial values
-     */
     const resetCalculator = () => {
         calculator.clear();
         setDisplay('0');
@@ -26,31 +21,19 @@ export default function CalculatorApp() {
         setError(null);
     };
 
-    /**
-     * Updates the display with a new value
-     */
     const updateDisplay = (value: string) => {
         setDisplay(value);
         setCurrentInput(value);
     };
 
-    /**
-     * Checks if a decimal point can be added
-     */
     const canAddDecimal = (): boolean => {
         return !currentInput.includes('.');
     };
 
-    /**
-     * Checks if display should be replaced or appended
-     */
     const shouldReplaceDisplay = (num: string): boolean => {
         return display === '0' && num !== '.';
     };
 
-    /**
-     * Formats a number for display (limits decimal places)
-     */
     const formatNumber = (num: number): string => {
         // If it's a whole number, show as is
         if (Number.isInteger(num)) return String(num);
@@ -59,26 +42,15 @@ export default function CalculatorApp() {
         return num.toFixed(8).replace(/\.?0+$/, '');
     };
 
-    /**
-     * Shows an error message
-     */
     const showError = (message: string) => {
         setError(message);
         setDisplay('Error');
     };
 
-    /**
-     * Clears the error state
-     */
     const clearError = () => {
         setError(null);
     };
 
-    // ===== EVENT HANDLERS =====
-
-    /**
-     * Handles number and decimal point button clicks
-     */
     const handleNumberClick = (num: string) => {
         clearError();
 
@@ -89,9 +61,6 @@ export default function CalculatorApp() {
         updateDisplay(newValue);
     };
 
-    /**
-     * Handles basic operation buttons (+, -, *, /)
-     */
     const handleBasicOperation = (op: string) => {
         if (currentInput === '') return;
 
@@ -110,9 +79,6 @@ export default function CalculatorApp() {
         setDisplay('0');
     };
 
-    /**
-     * Executes the pending operation using the calculator class
-     */
     const executeOperation = () => {
         if (previousValue === null || currentInput === '' || !operation) return;
 
@@ -121,7 +87,6 @@ export default function CalculatorApp() {
         try {
             let result: number;
 
-            // Use the calculator class methods
             switch (operation) {
                 case '+':
                     result = calculator.add(previousValue, current);
@@ -150,9 +115,6 @@ export default function CalculatorApp() {
         }
     };
 
-    /**
-     * Handles scientific function buttons
-     */
     const handleScientificFunction = (func: string) => {
         if (currentInput === '') return;
 
@@ -162,7 +124,6 @@ export default function CalculatorApp() {
         try {
             let result: number;
 
-            // Use scientific calculator methods
             switch (func) {
                 case 'sqrt':
                     result = calculator.squareRoot(value);
@@ -203,9 +164,6 @@ export default function CalculatorApp() {
         }
     };
 
-    /**
-     * Handles the backspace button
-     */
     const handleBackspace = () => {
         if (currentInput.length <= 1) {
             updateDisplay('0');
@@ -216,18 +174,10 @@ export default function CalculatorApp() {
         }
     };
 
-    /**
-     * Toggles between basic and scientific mode
-     */
     const toggleMode = () => {
         setShowScientific(!showScientific);
     };
 
-    // ===== RENDER HELPER FUNCTIONS =====
-
-    /**
-     * Renders a calculator button with appropriate styling
-     */
     const renderButton = (
         label: string,
         onClick: () => void,
@@ -245,9 +195,6 @@ export default function CalculatorApp() {
         );
     };
 
-    /**
-     * Renders the scientific buttons panel
-     */
     const renderScientificPanel = () => {
         if (!showScientific) return null;
 
@@ -255,8 +202,8 @@ export default function CalculatorApp() {
             { label: 'sin', func: 'sin' },
             { label: 'cos', func: 'cos' },
             { label: 'tan', func: 'tan' },
-            { label: '√', func: 'sqrt' },
-            { label: 'x²', func: 'square' },
+            { label: 'sqrt', func: 'sqrt' },
+            { label: 'x^2', func: 'square' },
             { label: 'ln', func: 'ln' },
             { label: 'log', func: 'log' },
             { label: 'n!', func: 'factorial' },
@@ -277,7 +224,6 @@ export default function CalculatorApp() {
         );
     };
 
-    // ===== MAIN RENDER =====
     return (
         <div className="calculator-container">
             <div className="calculator-wrapper">
@@ -332,11 +278,6 @@ export default function CalculatorApp() {
                     {renderButton('0', () => handleNumberClick('0'), 'btn-number', 2)}
                     {renderButton('.', () => handleNumberClick('.'))}
                     {renderButton('=', executeOperation, 'btn-equals')}
-                </div>
-
-                {/* Footer */}
-                <div className="calculator-info">
-                    ✨ Powered by your ScientificCalculator class
                 </div>
             </div>
         </div>
