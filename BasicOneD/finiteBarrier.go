@@ -172,6 +172,13 @@ func (fb *FiniteBarrier) scattering(kL, kR float64, left []complex128) []complex
 	return result
 }
 
+func (fb *FiniteBarrier) TransProb(kL, kR float64) []float64 {
+
+}
+
+func (fb *FiniteBarrier) TransProbInPlace(kL, kR float64) {
+}
+
 type TDFiniteBarrier struct {
 	barrier *FiniteBarrier
 	tdGrid  *gridData.TimeGrid

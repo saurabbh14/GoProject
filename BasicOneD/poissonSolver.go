@@ -116,8 +116,7 @@ func (PS1D *PoissonSolver1D) IteratingStepMethod() ([]float64, int, error) {
 	return nil, PS1D.maxIter, fmt.Errorf("did not converge in %d iterations", PS1D.maxIter)
 }
 
-// IteratingStepWithOmega SOR (Successive Over-Relaxation) method
-// omega: relaxation parameter (typical range: 1.0 to 2.0)
+// IteratingStepWithOmega
 //
 //	omega = 1.0 → Gauss-Seidel
 //	omega > 1.0 → over-relaxation
