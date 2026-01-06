@@ -252,15 +252,15 @@ export default function CalculatorApp() {
                 <div className="button-grid">
                     {/* Row 1 */}
                     {renderButton('C', resetCalculator, 'btn-clear')}
-                    {renderButton('←', handleBackspace, 'btn-special')}
+                    {renderButton('del', handleBackspace, 'btn-special')}
                     {renderButton('|x|', () => handleScientificFunction('abs'), 'btn-special')}
-                    {renderButton('÷', () => handleBasicOperation('/'), 'btn-operator')}
+                    {renderButton('/', () => handleBasicOperation('/'), 'btn-operator')}
 
                     {/* Row 2 */}
                     {renderButton('7', () => handleNumberClick('7'))}
                     {renderButton('8', () => handleNumberClick('8'))}
                     {renderButton('9', () => handleNumberClick('9'))}
-                    {renderButton('×', () => handleBasicOperation('*'), 'btn-operator')}
+                    {renderButton('*', () => handleBasicOperation('*'), 'btn-operator')}
 
                     {/* Row 3 */}
                     {renderButton('4', () => handleNumberClick('4'))}
