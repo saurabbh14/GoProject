@@ -9,18 +9,21 @@ import (
 )
 
 type SineBasisHF struct {
-	grid *gridData.RadGrid
-	poten gridData.PotentialOp[float64]
-	ne   uint8
-	nAos int
+	grid			*gridData.RadGrid
+	VExternal		gridData.PotentialOp[float64]
+	VTwoParticle	gridData.PotentialOp[float64]
+	ne				uint8
+	nAos			int
 }
 
-func NewSinBasis(grid *gridData.RadGrid, pot gridData.PotentialOp[float64], ne uint8, nAos int) *SineBasisHF {
+func NewSinBasis(grid *gridData.RadGrid, pot gridData.PotentialOp[float64], pot2e gridData.PotentialOp[float64],
+	ne uint8, nAos int) *SineBasisHF {
 	return &SineBasisHF{
-		grid: grid,
-		poten: pot,
-		ne:   ne,
-		nAos: nAos,
+		grid:      grid,
+		VExternal: pot,
+		VTwoParticle: pot2e,
+		ne:        ne,
+		nAos:      nAos,
 	}
 }
 
@@ -42,7 +45,7 @@ func (s *SineBasisHF) Basis() *mat.Dense {
 
 func (s *SineBasisHF) BuildHcoreIntegrals(){
 	Phi := s.Basis()
-	v := s.grid.PotentialOnGrid(s.poten)
+	v := s.grid.PotentialOnGrid(s.VExternal)
 	piByL := math.Pi/s.grid.Length()
 
 	h := mat.NewDense(s.nAos, s.nAos, nil)
@@ -80,7 +83,7 @@ func (s *SineBasisHF) BuildIntegrals() ([]float64, *mat.Dense, [][][][]float64) 
 	A := make([][][]float64, s.nAos)
 	for p := 0; p < s.nAos; p++ {
 		A[p] = make([][]float64, s.nAos)
-		for q := 0; q < M; q++ {
+		for q := 0; q < s.nAos; q++ {
 			A[p][q] = make([]float64, Ngrid)
 			for i := 0; i < Ngrid; i++ {
 				A[p][q][i] = Phi.At(p, i) * Phi.At(q, i)
@@ -89,10 +92,10 @@ func (s *SineBasisHF) BuildIntegrals() ([]float64, *mat.Dense, [][][][]float64) 
 	}
 
 	// B[p,q,j] = sum_i A[p,q,i] * W[i,j] * dx
-	B := make([][][]float64, M)
-	for p := 0; p < M; p++ {
-		B[p] = make([][]float64, M)
-		for q := 0; q < M; q++ {
+	B := make([][][]float64, s.nAos)
+	for p := 0; p < s.nAos; p++ {
+		B[p] = make([][]float64, s.nAos)
+		for q := 0; q < s.nAos; q++ {
 			B[p][q] = make([]float64, Ngrid)
 			for j := 0; j < Ngrid; j++ {
 				sum := 0.0
