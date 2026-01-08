@@ -1,4 +1,4 @@
-package BasicOneD
+package PDESolver
 
 import (
 	"GoProject/gridData"

@@ -16,8 +16,7 @@ type Function[T VarType] interface {
 }
 
 type Rfunc interface {
-	EvaluateAt(x float64) float64
-	NDimEvaluateAt(x []float64) float64
+	Function[float64]
 }
 
 type RectangleBarrier struct {

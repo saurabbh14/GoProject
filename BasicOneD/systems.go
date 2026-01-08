@@ -1,6 +1,7 @@
 package BasicOneD
 
 import (
+	"GoProject/PDESolver"
 	"GoProject/gridData"
 	"fmt"
 )
@@ -15,7 +16,7 @@ func OneDimPoissonSolver() error {
 	if err != nil {
 		return err
 	}
-	Solver1D, err := NewOneDimPoissonSolver(grid, gaus)
+	Solver1D, err := PDESolver.NewOneDimPoissonSolver(grid, gaus)
 	if err != nil {
 		return err
 	}
