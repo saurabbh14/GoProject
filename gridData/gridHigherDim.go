@@ -2,6 +2,7 @@ package gridData
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"log"
 	"math"
@@ -230,15 +231,15 @@ func (g *NDimGrid) TotalPoints() uint64 {
 }
 
 // RValues returns grid points for a specific dimension
-func (g *NDimGrid) RValues(dim uint32) []float64 {
+func (g *NDimGrid) RValues(dim uint32) ([]float64, error) {
 	if dim >= g.nDim {
-		return nil
+		return nil, errors.New("invalid dimension")
 	}
 	result := make([]float64, g.nPoints[dim])
 	for i := uint32(0); i < g.nPoints[dim]; i++ {
 		result[i] = g.mins[dim] + float64(i)*g.gridData[dim].deltaS
 	}
-	return result
+	return result, nil
 }
 
 // KValues returns k-space points for a specific dimension
