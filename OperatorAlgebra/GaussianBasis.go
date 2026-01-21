@@ -208,7 +208,7 @@ func (hf *HartreeFock) buildGMatrix() *mat.Dense {
 	return gmat
 }
 
-// solveFockEquation diagonalizes the Fock matrix in orthogonal basis
+// solveFockEquation diagonalizes the Fock matrix in an orthogonal basis
 func (hf *HartreeFock) solveFockEquation() {
 	norb := hf.config.Norb
 	temp := mat.NewDense(norb, norb, nil)
