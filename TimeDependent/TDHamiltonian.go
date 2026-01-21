@@ -13,6 +13,16 @@ const (
 	Acceleration
 )
 
+type CanTimeSolverOp interface {
+	ExpDtTo(At float64, In []float64, Out []float64) error
+	ExpDtInPlace(At float64, InOut []float64) error
+}
+
+type TimeSolverOp interface {
+	ExpIdtTo(Dt float64, In []complex128, Out []complex128) error
+	ExpIdtInPlace(Dt float64, InOut []complex128) error
+}
+
 type TDCalculation struct {
 	Hamil    *Quantum.HamiltonianOp
 	gauge    GaugeType

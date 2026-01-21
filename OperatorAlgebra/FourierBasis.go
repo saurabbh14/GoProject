@@ -12,8 +12,8 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
-// FourierBasis represents the kinetic energy operator in a Fourier basis
-type FourierBasis struct {
+// FFTCal represents the kinetic energy operator in a Fourier basis
+type FFTCal struct {
 	grid     *gridData.RadGrid
 	mass     float64
 	nPoints  int
@@ -24,46 +24,21 @@ type FourierBasis struct {
 	keValues []float64
 }
 
-func (f *FourierBasis) RealDiagonalize() (eigenvalues []float64, eigenvectors *mat.Dense, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (f *FourierBasis) ExpDtTo(Dt float64, In []float64, Out []float64) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (f *FourierBasis) ExpDtInPlace(Dt float64, InOut []float64) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (f *FourierBasis) ExpIdtTo(Dt float64, In []complex128, Out []complex128) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (f *FourierBasis) ExpIdtInPlace(Dt float64, InOut []complex128) error {
-	//TODO implement me
-	panic("implement me")
-}
-
 // FFTInit creates a new Fourier struct for fast fourier transform
-func FFTInit(grid *gridData.RadGrid, mass float64) *FourierBasis {
-	fb := &FourierBasis{}
+func FFTInit(grid *gridData.RadGrid, mass float64) *FFTCal {
+	fb := &FFTCal{}
 	fb.initialize(grid, mass)
-	runtime.SetFinalizer(fb, (*FourierBasis).destroy)
+	runtime.SetFinalizer(fb, (*FFTCal).destroy)
 	return fb
 }
 
-func (f *FourierBasis) Redefine(grid *gridData.RadGrid, mass float64) {
+func (f *FFTCal) Redefine(grid *gridData.RadGrid, mass float64) {
 	(*fftw.Plan).Destroy(&f.fftPlan)
 	(*fftw.Plan).Destroy(&f.ifftPlan)
 	f.initialize(grid, mass)
 }
 
-func (f *FourierBasis) initialize(grid *gridData.RadGrid, mass float64) {
+func (f *FFTCal) initialize(grid *gridData.RadGrid, mass float64) {
 	gridPoints := int(grid.NPoints())
 	kVal := grid.KValues()
 
@@ -99,41 +74,41 @@ func (f *FourierBasis) initialize(grid *gridData.RadGrid, mass float64) {
 	f.keValues = keValues
 }
 
-func (f *FourierBasis) forwardBuff(in []complex128) {
+func (f *FFTCal) forwardBuff(in []complex128) {
 	copy(f.Buff.Elems, in)
 	f.fftPlan.Execute()
 }
 
-func (f *FourierBasis) forward(in []complex128, out []complex128) {
+func (f *FFTCal) forward(in []complex128, out []complex128) {
 	copy(f.Buff.Elems, in)
 	f.fftPlan.Execute()
 	copy(out, f.Buff.Elems)
 }
 
-func (f *FourierBasis) forwardInPlace(InOut []complex128) {
+func (f *FFTCal) forwardInPlace(InOut []complex128) {
 	copy(f.Buff.Elems, InOut)
 	f.fftPlan.Execute()
 	copy(InOut, f.Buff.Elems)
 }
 
-func (f *FourierBasis) backwardBuff(in []complex128) {
+func (f *FFTCal) backwardBuff(in []complex128) {
 	copy(f.Buff.Elems, in)
 	f.ifftPlan.Execute()
 }
 
-func (f *FourierBasis) backward(in []complex128, out []complex128) {
+func (f *FFTCal) backward(in []complex128, out []complex128) {
 	copy(f.Buff.Elems, in)
 	f.ifftPlan.Execute()
 	copy(out, f.Buff.Elems)
 }
 
-func (f *FourierBasis) backwardInPlace(InOut []complex128) {
+func (f *FFTCal) backwardInPlace(InOut []complex128) {
 	copy(f.Buff.Elems, InOut)
 	f.ifftPlan.Execute()
 	copy(InOut, f.Buff.Elems)
 }
 
-func (f *FourierBasis) operatorOp(InOut []complex128, Op []float64) {
+func (f *FFTCal) operatorOp(InOut []complex128, Op []float64) {
 	if len(f.Buff.Elems) != len(Op) {
 		panic(fmt.Sprintf("length mismatch: Buff.Elems=%d, kValues=%d",
 			len(f.Buff.Elems), len(Op)))
@@ -150,27 +125,32 @@ func (f *FourierBasis) operatorOp(InOut []complex128, Op []float64) {
 	copy(InOut, f.Buff.Elems)
 }
 
-func (f *FourierBasis) MomentumOpInPlace(InOut []complex128) {
-	f.operatorOp(InOut, f.kValues)
+type FourierGridHamil struct {
+	fft  *FFTCal
+	mass float64
 }
 
-func (f *FourierBasis) MomentumOp(In []complex128, Out []complex128) {
+func (f *FourierGridHamil) MomentumOpInPlace(InOut []complex128) {
+	f.fft.operatorOp(InOut, f.kValues)
+}
+
+func (f *FFTCal) MomentumOp(In []complex128, Out []complex128) {
 	copy(Out, In)
 	f.MomentumOpInPlace(Out)
 	copy(Out, f.Buff.Elems)
 }
 
-func (f *FourierBasis) LaplacianOpInPlace(InOut []complex128) {
+func (f *FFTCal) LaplacianOpInPlace(InOut []complex128) {
 	f.operatorOp(InOut, f.keValues)
 }
 
-func (f *FourierBasis) LaplacianOp(In []complex128, Out []complex128) {
+func (f *FFTCal) LaplacianOp(In []complex128, Out []complex128) {
 	copy(Out, In)
 	f.LaplacianOpInPlace(Out)
 	copy(Out, f.Buff.Elems)
 }
 
-func (f *FourierBasis) BuildHamiltonianFGH() *mat.SymDense {
+func (f *FFTCal) BuildHamiltonianFGH() *mat.SymDense {
 	Tr := make([]float64, f.nPoints)
 	pref := 1. / (2.0 * f.mass)
 	for r := 1; r <= f.nPoints; r++ {
@@ -194,7 +174,7 @@ func (f *FourierBasis) BuildHamiltonianFGH() *mat.SymDense {
 	return H
 }
 
-func (f *FourierBasis) DiagonalizeSym() (vals []float64, vecs *mat.Dense) {
+func (f *FFTCal) DiagonalizeSym() (vals []float64, vecs *mat.Dense) {
 	H := f.BuildHamiltonianFGH()
 	var es mat.EigenSym
 	ok := es.Factorize(H, true)
@@ -207,7 +187,7 @@ func (f *FourierBasis) DiagonalizeSym() (vals []float64, vecs *mat.Dense) {
 	return vals, vecs
 }
 
-func (f *FourierBasis) destroy() {
+func (f *FFTCal) destroy() {
 	if f != nil {
 		(*fftw.Plan).Destroy(&f.fftPlan)
 		(*fftw.Plan).Destroy(&f.ifftPlan)
@@ -216,8 +196,8 @@ func (f *FourierBasis) destroy() {
 }
 
 // Clean cleans up FFTW
-func (f *FourierBasis) Clean() {
-	runtime.SetFinalizer(f, (*FourierBasis).destroy)
+func (f *FFTCal) Clean() {
+	runtime.SetFinalizer(f, (*FFTCal).destroy)
 	f.destroy()
 	fmt.Println("Cleaned")
 }

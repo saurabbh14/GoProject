@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"math/cmplx"
 
 	"gonum.org/v1/gonum/mat"
 )
@@ -234,68 +233,5 @@ func (k *KeDvrBasis) ExpDtInPlace(dt float64, inOut []float64) error {
 		return err
 	}
 	copy(inOut, tmp)
-	return nil
-}
-
-// ExpIdt computes exp(i*dt*K) and applies it to a complex input vector (allocating output)
-func (k *KeDvrBasis) ExpIdt(dt float64, in []complex128) ([]complex128, error) {
-	if len(in) != k.ndims {
-		return nil, fmt.Errorf("input vector length %d doesn't match basis dimension %d", len(in), k.ndims)
-	}
-	out := make([]complex128, k.ndims)
-	if err := k.ExpIdtTo(dt, in, out); err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (k *KeDvrBasis) ExpIdtInPlace(dt float64, inOut []complex128) error {
-	if len(inOut) != k.ndims {
-		return fmt.Errorf("vector length %d doesn't match basis dimension %d", len(inOut), k.ndims)
-	}
-	tmp := make([]complex128, k.ndims)
-	if err := k.ExpIdtTo(dt, inOut, tmp); err != nil {
-		return err
-	}
-	copy(inOut, tmp)
-	return nil
-}
-
-// ExpIdtTo applies exp(i * Dt * K) to In and writes to Out (complex -> complex)
-func (k *KeDvrBasis) ExpIdtTo(Dt float64, In []complex128, Out []complex128) error {
-	if len(In) != k.ndims || len(Out) != k.ndims {
-		return fmt.Errorf("vector length mismatch: got In=%d Out=%d, expected %d", len(In), len(Out), k.ndims)
-	}
-	if err := k.ensureEigen(); err != nil {
-		return err
-	}
-
-	V := k.eigVecs
-	lams := k.eigVals
-
-	// tmp = V^T * In  (complex)
-	tmp := make([]complex128, k.ndims)
-	for i := 0; i < k.ndims; i++ {
-		var sum complex128
-		for j := 0; j < k.ndims; j++ {
-			sum += complex(V.At(j, i), 0) * In[j]
-		}
-		tmp[i] = sum
-	}
-
-	// tmp[i] *= exp(i * Dt * lambda_i)
-	for i := 0; i < k.ndims; i++ {
-		tmp[i] *= cmplx.Exp(complex(0, Dt*lams[i]))
-	}
-
-	// Out = V * tmp
-	for i := 0; i < k.ndims; i++ {
-		var sum complex128
-		for j := 0; j < k.ndims; j++ {
-			sum += complex(V.At(i, j), 0) * tmp[j]
-		}
-		Out[i] = sum
-	}
-
 	return nil
 }
