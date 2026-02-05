@@ -133,7 +133,7 @@ func TestClear(t *testing.T) {
 	grid, _ := gridData.NewRGrid(-5.0, 5.0, 10)
 	ke := NewKeDVR(grid, 1.0)
 	ke.GetMat()
-	err := ke.ensureEigen()
+	err := ke.EvalEigenVectors()
 	if err != nil {
 		return
 	}
@@ -196,9 +196,9 @@ func TestRealDiagonalize(t *testing.T) {
 	grid, _ := gridData.NewRGrid(-5.0, 5.0, 10)
 	ke := NewKeDVR(grid, 1.0)
 
-	eigenvalues, eigenvectors, err := ke.RealDiagonalize()
+	eigenvalues, eigenvectors, err := ke.GetEigenValuesVectors()
 	if err != nil {
-		t.Fatalf("RealDiagonalize failed: %v", err)
+		t.Fatalf("Get_Eigen_Values_Vectors failed: %v", err)
 	}
 
 	if len(eigenvalues) != 10 {
@@ -406,7 +406,7 @@ func TestClone(t *testing.T) {
 	ke := NewKeDVR(grid, 2.0)
 
 	ke.GetMat()
-	err := ke.ensureEigen()
+	err := ke.EvalEigenVectors()
 	if err != nil {
 		return
 	}
@@ -432,9 +432,9 @@ func TestCloneWithoutCache(t *testing.T) {
 	ke := NewKeDVR(grid, 2.0)
 	keClone := ke.Clone()
 
-	_, err, _ := keClone.RealDiagonalize()
+	_, err, _ := keClone.GetEigenValuesVectors()
 	if err != nil {
-		t.Fatalf("Clone RealDiagonalize failed: %v", err)
+		t.Fatalf("Clone Get_Eigen_Values_Vectors failed: %v", err)
 	}
 }
 
@@ -442,9 +442,9 @@ func TestEigenvaluesOrdering(t *testing.T) {
 	grid, _ := gridData.NewRGrid(-5.0, 5.0, 15)
 	ke := NewKeDVR(grid, 1.0)
 
-	eigenvalues, _, err := ke.RealDiagonalize()
+	eigenvalues, _, err := ke.GetEigenValuesVectors()
 	if err != nil {
-		t.Fatalf("RealDiagonalize failed: %v", err)
+		t.Fatalf("Get_Eigen_Values_Vectors failed: %v", err)
 	}
 
 	// Check eigenvalues are in ascending order (gonum returns them sorted)
@@ -491,9 +491,9 @@ func TestLargeDimension(t *testing.T) {
 	}
 
 	// Should be able to compute matrix and eigenvalues
-	eigenvalues, _, err := ke.RealDiagonalize()
+	eigenvalues, _, err := ke.GetEigenValuesVectors()
 	if err != nil {
-		t.Fatalf("RealDiagonalize failed for large matrix: %v", err)
+		t.Fatalf("Get_Eigen_Values_Vectors failed for large matrix: %v", err)
 	}
 
 	if len(eigenvalues) != 100 {
@@ -508,8 +508,8 @@ func TestDifferentMasses(t *testing.T) {
 	keLightMass := NewKeDVR(grid, 1.0)
 	keHeavyMass := NewKeDVR(grid, 10.0)
 
-	evLight, _, _ := keLightMass.RealDiagonalize()
-	evHeavy, _, _ := keHeavyMass.RealDiagonalize()
+	evLight, _, _ := keLightMass.GetEigenValuesVectors()
+	evHeavy, _, _ := keHeavyMass.GetEigenValuesVectors()
 
 	// Each eigenvalue for heavy mass should be smaller (by factor of a mass ratio)
 	for i := range evLight {
@@ -538,7 +538,7 @@ func BenchmarkRealDiagonalize(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		ke := NewKeDVR(grid, 1.0)
-		_, _, err := ke.RealDiagonalize()
+		_, _, err := ke.GetEigenValuesVectors()
 		if err != nil {
 			return
 		}
@@ -554,7 +554,7 @@ func BenchmarkExpDt(b *testing.B) {
 		in[i] = math.Sin(float64(i) * 0.1)
 	}
 
-	err := ke.ensureEigen()
+	err := ke.EvalEigenVectors()
 	if err != nil {
 		return
 	}
@@ -577,7 +577,7 @@ func BenchmarkExpIdt(b *testing.B) {
 		in[i] = complex(math.Sin(float64(i)*0.1), math.Cos(float64(i)*0.1))
 	}
 
-	err := ke.ensureEigen()
+	err := ke.EvalEigenVectors()
 	if err != nil {
 		return
 	}

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"math"
 
+	"gonum.org/v1/gonum/blas"
+	"gonum.org/v1/gonum/blas/blas64"
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -20,6 +22,8 @@ type KeDvrBasis struct {
 	kMat       *mat.Dense
 
 	kMatCached bool
+	eigVals    []float64
+	eigVecs    *mat.Dense
 }
 
 // NewKeDVR creates and initializes DVR basis
@@ -58,6 +62,8 @@ func (k *KeDvrBasis) Mass() float64 {
 
 func (k *KeDvrBasis) Clear() {
 	k.kMatCached = false
+	k.eigVals = nil
+	k.eigVecs = nil
 }
 
 func (k *KeDvrBasis) isZeroToInfinity() bool {
@@ -115,17 +121,15 @@ func (k *KeDvrBasis) GetMat() *mat.Dense {
 	return k.kMat
 }
 
-func (k *KeDvrBasis) ensureEigen(eigvals []float64, eigvecs *mat.Dense) error {
-	if eigvecs == nil || eigvals == nil {
-		eigvals = make([]float64, k.ndims)
-		eigvecs = mat.NewDense(k.ndims, k.ndims, nil)
+func (k *KeDvrBasis) EvalEigenVectors() error {
+	if k.eigVals != nil && k.eigVecs != nil {
+		return nil
 	}
 
-	if len(eigvals) != k.ndims || eigvecs.Dims() != k.GetMat().Dims() {
-		return errors.New("eigenvalues array length mismatch")
-	}
-
+	k.eigVals = make([]float64, k.ndims)
+	k.eigVecs = mat.NewDense(k.ndims, k.ndims, nil)
 	KM := k.GetMat()
+
 	sym := mat.NewSymDense(k.ndims, nil)
 	for i := 0; i < k.ndims; i++ {
 		for j := i; j < k.ndims; j++ {
@@ -139,79 +143,93 @@ func (k *KeDvrBasis) ensureEigen(eigvals []float64, eigvecs *mat.Dense) error {
 		return errors.New("eigendecomposition failed (EigenSym.Factorize returned false)")
 	}
 
-	eigvals = es.Values(nil)
-	eigvecs = mat.NewDense(k.ndims, k.ndims, nil)
-	es.VectorsTo(eigvecs)
+	k.eigVals = es.Values(k.eigVals)
+	es.VectorsTo(k.eigVecs)
 
 	return nil
 }
 
-func (k *KeDvrBasis) RealDiagonalize(eigenvalues []float64, eigenvectors *mat.Dense) error {
-	err := k.ensureEigen(eigenvalues, eigenvectors)
-	if err != nil {
+func (k *KeDvrBasis) GetEigenValuesVectors(eigenvalues []float64, eigenvectors *mat.Dense) error {
+	if err := k.EvalEigenVectors(); err != nil {
 		return err
 	}
+
+	if eigenvalues != nil && len(eigenvalues) != k.ndims {
+		return errors.New("eigenvalues array length mismatch")
+	}
+	if eigenvectors != nil {
+		r, c := eigenvectors.Dims()
+		if r != k.ndims || c != k.ndims {
+			return errors.New("eigenvectors matrix dimensions mismatch")
+		}
+	}
+
+	if eigenvalues != nil {
+		copy(eigenvalues, k.eigVals)
+	}
+	if eigenvectors != nil {
+		eigenvectors.Copy(k.eigVecs)
+	}
+
 	return nil
-}
-
-func (k *KeDvrBasis) Clone() *KeDvrBasis {
-	newK := &KeDvrBasis{
-		grid:       k.grid,
-		mass:       k.mass,
-		ndims:      k.ndims,
-		dx2:        k.dx2,
-		invMassDx2: k.invMassDx2,
-		diagTerm:   k.diagTerm,
-		kMat:       mat.NewDense(k.ndims, k.ndims, nil),
-		kMatCached: false,
-	}
-
-	if k.kMatCached {
-		newK.kMat.Copy(k.kMat)
-		newK.kMatCached = true
-	}
-	return newK
 }
 
 func (k *KeDvrBasis) ExpDtTo(Dt float64, In []float64, Out []float64) error {
 	if len(In) != k.ndims || len(Out) != k.ndims {
 		return fmt.Errorf("vector length mismatch: got In=%d Out=%d, expected %d", len(In), len(Out), k.ndims)
 	}
-	if err := k.ensureEigen(); err != nil {
+
+	if err := k.EvalEigenVectors(); err != nil {
 		return err
 	}
 
 	V := k.eigVecs
 	lams := k.eigVals
 
-	// tmp = V^T * In  (real)
 	tmp := make([]float64, k.ndims)
-	for i := 0; i < k.ndims; i++ {
-		sum := 0.0
-		for j := 0; j < k.ndims; j++ {
-			sum += V.At(j, i) * In[j] // V^T: (i,j) = V(j,i)
-		}
-		tmp[i] = sum
-	}
 
-	// tmp[i] *= exp(Dt * lambda_i)
+	vData := V.RawMatrix()
+	blas64.Gemv(blas.Trans, 1.0, vData, blas64.Vector{N: k.ndims, Data: In, Inc: 1},
+		0.0, blas64.Vector{N: k.ndims, Data: tmp, Inc: 1})
+
 	for i := 0; i < k.ndims; i++ {
 		tmp[i] *= math.Exp(Dt * lams[i])
 	}
 
-	// Out = V * tmp
-	for i := 0; i < k.ndims; i++ {
-		sum := 0.0
-		for j := 0; j < k.ndims; j++ {
-			sum += V.At(i, j) * tmp[j]
-		}
-		Out[i] = sum
-	}
+	blas64.Gemv(blas.NoTrans, 1.0, vData, blas64.Vector{N: k.ndims, Data: tmp, Inc: 1},
+		0.0, blas64.Vector{N: k.ndims, Data: Out, Inc: 1})
 
 	return nil
 }
 
-// ExpDt computes exp(dt * K) and applies it to input vector (allocating output)
+func (k *KeDvrBasis) ExpDtToMatWrapper(Dt float64, In []float64, Out []float64) error {
+	if len(In) != k.ndims || len(Out) != k.ndims {
+		return fmt.Errorf("vector length mismatch: got In=%d Out=%d, expected %d", len(In), len(Out), k.ndims)
+	}
+
+	if err := k.EvalEigenVectors(); err != nil {
+		return err
+	}
+
+	V := k.eigVecs
+	lams := k.eigVals
+
+	inVec := mat.NewVecDense(k.ndims, In)
+	tmpVec := mat.NewVecDense(k.ndims, nil)
+	outVec := mat.NewVecDense(k.ndims, Out)
+
+	tmpVec.MulVec(V.T(), inVec)
+
+	tmpData := tmpVec.RawVector().Data
+	for i := 0; i < k.ndims; i++ {
+		tmpData[i] *= math.Exp(Dt * lams[i])
+	}
+
+	outVec.MulVec(V, tmpVec)
+
+	return nil
+}
+
 func (k *KeDvrBasis) ExpDt(dt float64, in []float64) ([]float64, error) {
 	if len(in) != k.ndims {
 		return nil, fmt.Errorf("input vector length %d doesn't match basis dimension %d", len(in), k.ndims)
@@ -223,7 +241,6 @@ func (k *KeDvrBasis) ExpDt(dt float64, in []float64) ([]float64, error) {
 	return out, nil
 }
 
-// ExpDtInPlace computes exp(dt * K) and applies it to the input vector in-place
 func (k *KeDvrBasis) ExpDtInPlace(dt float64, inOut []float64) error {
 	if len(inOut) != k.ndims {
 		return fmt.Errorf("vector length %d doesn't match basis dimension %d", len(inOut), k.ndims)
