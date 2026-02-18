@@ -22,6 +22,10 @@ type Rfunc interface {
 type RfuncFunc func(float64) float64
 
 func (f RfuncFunc) EvaluateAt(x float64) float64 { return f(x) }
+func (f RfuncFunc) NDimEvaluateAt(x []float64) float64 {
+    // TODO
+	panic("implement me")
+}
 
 type RectangleBarrier struct {
 	vax []float64
