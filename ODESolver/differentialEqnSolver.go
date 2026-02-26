@@ -808,11 +808,11 @@ func (nRK5ex *Nystrom5Explicit) NextStep(xt, t float64) (float64, error) {
 	val = k1*nRK5ex.ksCoefs[3] + k2*nRK5ex.ksCoefs[4] + k3*nRK5ex.ksCoefs[5]
 	k4 := nRK5ex.timeFunc.EvaluateAtTime(xt+val, t+nRK5ex.dtCoefs[2])
 
-	val = k1*nRK5ex.ksCoefs[6] + k2*nRK5ex.ksCoefs[7] + k3*nRK5ex.ksCoefs[8] + k4*nRK5ex.ksCoefs[8]
+	val = k1*nRK5ex.ksCoefs[6] + k2*nRK5ex.ksCoefs[7] + k3*nRK5ex.ksCoefs[8] + k4*nRK5ex.ksCoefs[9]
 	k5 := nRK5ex.timeFunc.EvaluateAtTime(xt+val, t+nRK5ex.dtCoefs[3])
 
-	val = k1*nRK5ex.ksCoefs[9] + k2*nRK5ex.ksCoefs[10] + k3*nRK5ex.ksCoefs[11] + k4*nRK5ex.ksCoefs[12]
-	k6 := nRK5ex.timeFunc.EvaluateAtTime(xt+val, t+nRK5ex.dtCoefs[5])
+	val = k1*nRK5ex.ksCoefs[10] + k2*nRK5ex.ksCoefs[11] + k3*nRK5ex.ksCoefs[12] + k4*nRK5ex.ksCoefs[13]
+	k6 := nRK5ex.timeFunc.EvaluateAtTime(xt+val, t+nRK5ex.dtCoefs[4])
 
 	integrant := k1*nRK5ex.fnlCoefs[0] + k3*nRK5ex.fnlCoefs[1] + k5*nRK5ex.fnlCoefs[2] + k6*nRK5ex.fnlCoefs[1]
 
