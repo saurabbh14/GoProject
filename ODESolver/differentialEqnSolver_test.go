@@ -8,25 +8,6 @@ import (
 	"GoProject/gridData"
 )
 
-// a simple decay equation: dx/dt = -x
-type MockPotential struct{}
-
-// EvaluateOnRGridTime implements [gridData.TDPotentialOp].
-func (m *MockPotential) EvaluateOnRGridTime(x []float64, t float64) []float64 {
-	panic("unimplemented")
-}
-
-func (m *MockPotential) EvaluateAtTime(x, t float64) float64 {
-	// dx/dt = -x
-	return -x
-}
-
-func (m *MockPotential) EvaluateOnRGridTimeInPlace(x []float64, buff []float64, t float64) {
-	for i, v := range x {
-		buff[i] = -v
-	}
-}
-
 // TestEulerExplicit_NextStep tests the scalar stepping function.
 func TestEulerExplicit_NextStep(t *testing.T) {
 	mockFunc := &MockPotential{}
@@ -186,6 +167,7 @@ func TestEulerExplicit_Name(t *testing.T) {
 // This helps check higher order exactness, but since our interface is float64 scalar for simple potential,
 // we just stick to the decay one for stability and basic step correctness.
 
+// The following interfaces are declared to understand the type assertion.
 type ScalarODESolver interface {
     NextStep(x, time float64) (float64, error)
 }
@@ -194,6 +176,12 @@ type GridODESolver interface {
     NextStepOnGrid(x []float64, time float64) error
 }
 
+type GetSolvers interface {
+    getSolvers()
+}
+
+type ExplicitSolvers struct{}
+
 type SolverTestCase struct {
     Name         string
     Factory      func(dt float64, op gridData.TDPotentialOp) ScalarODESolver
@@ -201,7 +189,7 @@ type SolverTestCase struct {
     SupportsGrid bool
 }
 
-func GetSolvers() []SolverTestCase {
+func (s ExplicitSolvers) getSolvers() []SolverTestCase {
     return []SolverTestCase{
         {
             Name: "Euler Explicit",
@@ -312,11 +300,12 @@ func GetSolvers() []SolverTestCase {
 
 func TestAllSolvers_GridDecay(t *testing.T) {
     mockFunc := &MockPotential{}
+    s := ExplicitSolvers{}
     dt := 0.001
     steps := 10
     initialGrid := []float64{1.0, 2.0, -1.0, 0.5}
 
-    for _, tc := range GetSolvers() {
+    for _, tc := range s.getSolvers() {
         t.Run(tc.Name+"_Grid", func(t *testing.T) {
             solver := tc.Factory(dt, mockFunc)
             gridSolver, ok := solver.(GridODESolver)
@@ -347,13 +336,14 @@ func TestAllSolvers_GridDecay(t *testing.T) {
 
 func TestAllSolvers_FactorySmoke(t *testing.T) {
     mockFunc := &MockPotential{}
-    for _, tc := range GetSolvers() {
+    s := ExplicitSolvers{}
+    for _, tc := range s.getSolvers() {
         t.Run(tc.Name+"_FactorySmoke", func(t *testing.T) {
-            s := tc.Factory(0.01, mockFunc)
-            if s == nil {
+            solver := tc.Factory(0.01, mockFunc)
+            if solver == nil {
                 t.Fatal("factory returned nil solver")
             }
-            x, err := s.NextStep(1.0, 0.0)
+            x, err := solver.NextStep(1.0, 0.0)
             if err != nil {
                 t.Fatalf("NextStep failed: %v", err)
             }
@@ -371,10 +361,11 @@ func TestAllSolvers_SingleStepErrorBound(t *testing.T) {
     dt := 0.01
     exact := x0 * math.Exp(-dt)
 
-    for _, tc := range GetSolvers() {
+    s := ExplicitSolvers{}
+    for _, tc := range s.getSolvers() {
         t.Run(tc.Name+"_SingleStepError", func(t *testing.T) {
-            s := tc.Factory(dt, mockFunc)
-            x1, err := s.NextStep(x0, t0)
+            solver := tc.Factory(dt, mockFunc)
+            x1, err := solver.NextStep(x0, t0)
             if err != nil {
                 t.Fatalf("NextStep failed: %v", err)
             }

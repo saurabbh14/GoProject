@@ -157,7 +157,7 @@ func (BS *BogackiShampine) NextStep(xt, t float64) (float64, error) {
 	k4 := BS.timeFunc.EvaluateAtTime(xt+val*BS.deltaTime, t+BS.deltaTime)
 
 	xtPlusdt1 := xt + BS.deltaTime*(k1*BS.b1Coefs[0]+k2*BS.b1Coefs[1]+k3*BS.b1Coefs[2])
-	xtPlusdt2 := xt + BS.deltaTime*(k1*BS.b1Coefs[0]+k2*BS.b1Coefs[1]+k3*BS.b1Coefs[2]+k4*BS.b1Coefs[3])
+	xtPlusdt2 := xt + BS.deltaTime*(k1*BS.b2Coefs[0]+k2*BS.b2Coefs[1]+k3*BS.b2Coefs[2]+k4*BS.b2Coefs[3])
 
 	Err := math.Abs(xtPlusdt1-xtPlusdt2) / BS.deltaTime
 
