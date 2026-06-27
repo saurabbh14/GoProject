@@ -23,6 +23,13 @@ func (eImFP *EulerImplicitFixPoint) Name() string {
 	return "Euler Method"
 }
 
+func (eImFP *EulerImplicitFixPoint) NewDefine(dt float64, tdFunc gridData.TDPotentialOp) *EulerImplicitFixPoint {
+	return &EulerImplicitFixPoint{
+		TdFunc: tdFunc,
+		DeltaT: dt,
+	}
+}
+
 func (eImFP *EulerImplicitFixPoint) NextStep(xt, t float64) (float64, error) {
 	xPre := xt
 
@@ -88,6 +95,13 @@ type HeunsImplicitFixPoint struct {
 
 func (hIm *HeunsImplicitFixPoint) Name() string {
 	return "Heun's Method (Improved Euler method)"
+}
+
+func (hIm *HeunsImplicitFixPoint) NewDefine(dt float64, tdFunc gridData.TDPotentialOp) *HeunsImplicitFixPoint {
+	return &HeunsImplicitFixPoint{
+		TdFunc: tdFunc,
+		DeltaT: dt,
+	}
 }
 
 func (hIm *HeunsImplicitFixPoint) PredictIni(xt, fxt, xP []float64) {
